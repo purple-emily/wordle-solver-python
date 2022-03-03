@@ -1,6 +1,6 @@
 import pytest
 
-from template_basic_python.main import add_numbers
+from wordle_solver.__main__ import add_numbers
 
 
 @pytest.mark.parametrize(
