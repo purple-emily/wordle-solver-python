@@ -1,0 +1,4 @@
+[default]
+
+[testing]
+tests_enabled = true
