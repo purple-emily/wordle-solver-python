@@ -1,6 +1,6 @@
 import pytest
 
-from template_basic_python.config import settings
+from wordle_solver.config import settings
 
 
 def test_dynaconf():

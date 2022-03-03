@@ -3,7 +3,7 @@ ignore = D100,D104,E203,E501,W503
 extend-ignore =
 per-file-ignores =
     tests/*:S101,D103
-    src/template_basic_python/__init__.py:F401
+    src/wordle_solver/__init__.py:F401
 exclude =
     .git
     __pycache__

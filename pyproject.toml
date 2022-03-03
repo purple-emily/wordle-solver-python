@@ -1,11 +1,15 @@
 [tool.poetry]
-name = "template-basic-python" # make sure the refrence to 'template-basic-python' is updated
+name = "wordle-solver-python"
 version = "0.1.0"
-description = "Basic python starter template"
+description = "A solver for the popular word game Wordle, written in Python."
 readme = "README.md"
 authors = ["purple_emily <purple_emily@protonmail.com>"]
 license = "MIT"
-repository = "https://github.com/purple-emily/template-basic-python"
+repository = "https://github.com/purple-emily/wordle-solver-python"
+
+packages = [
+    { include = "src/wordle_solver" }
+]
 
 # Keywords description https://python-poetry.org/docs/pyproject/#keywords
 # keywords = []
@@ -46,7 +50,8 @@ pytest-randomly = "^3.11.0"
 
 
 [tool.poetry.scripts]
-example = "template_basic_python.main:main"
+ws = "wordle_solver.__main__:main"
+wordle-solver = "wordle_solver.__main__:main"
 
 
 [tool.taskipy.tasks]
@@ -72,7 +77,7 @@ profile = "black"
 
 [tool.coverage.run]
 branch = true
-source = ["template_basic_python"]
+source = ["wordle_solver"]
 data_file = ".cache/.coverage"
 
 [tool.coverage.report]
