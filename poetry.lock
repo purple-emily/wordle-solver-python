@@ -263,17 +263,6 @@ python-versions = ">=3.6.2,<4.0.0"
 flake8-plugin-utils = ">=1.3.2,<2.0.0"
 
 [[package]]
-name = "flake8-type-checking"
-version = "1.3.2"
-description = "A flake8 plugin for managing type-checking imports & forward references"
-category = "dev"
-optional = false
-python-versions = ">=3.8,<4.0"
-
-[package.dependencies]
-flake8 = "*"
-
-[[package]]
 name = "identify"
 version = "2.4.11"
 description = "File identification library for Python"
@@ -722,7 +711,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "cff7289d5aa30a17de4918336eaad14be26591c496346efd991242bee6df0494"
+content-hash = "477f129667003eb1498fa33474127e7aaef2cc8a18ab36a9f87bfe43f96deff4"
 
 [metadata.files]
 atomicwrites = [
@@ -876,10 +865,6 @@ flake8-polyfill = [
 flake8-pytest-style = [
     {file = "flake8-pytest-style-1.6.0.tar.gz", hash = "sha256:c1175713e9e11b78cd1a035ed0bca0d1e41d09c4af329a952750b61d4194ddac"},
     {file = "flake8_pytest_style-1.6.0-py3-none-any.whl", hash = "sha256:5fedb371a950e9fe0e0e6bfc854be7d99151271208f34cd2cc517681ece27780"},
-]
-flake8-type-checking = [
-    {file = "flake8-type-checking-1.3.2.tar.gz", hash = "sha256:0a040a2f1803c913b2a4836a3130162bd3929013d0fec0558dfd3b9026446e33"},
-    {file = "flake8_type_checking-1.3.2-py3-none-any.whl", hash = "sha256:ff43a78978503ca6df40cc92b5f5a1c98b70ce52d272569dcf94a902e4de0100"},
 ]
 identify = [
     {file = "identify-2.4.11-py2.py3-none-any.whl", hash = "sha256:fd906823ed1db23c7a48f9b176a1d71cb8abede1e21ebe614bac7bdd688d9213"},
