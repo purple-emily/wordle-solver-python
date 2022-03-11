@@ -3,11 +3,13 @@ from pathlib import Path
 
 from wordle_solver.config import settings
 
+DEFAULT_WORDLIST_PATH = (
+    Path(__file__).parent.parent.parent / "data" / f"{settings.default_wordlist}"
+)
+
 
 def load_word_list(
-    directory: Path = (
-        Path(__file__).parent.parent.parent / "data" / f"{settings.default_wordlist}"
-    ),
+    directory: Path = DEFAULT_WORDLIST_PATH,
 ) -> tuple[str, list[str], list[str]]:
     """Load a word list from a directory.
 
