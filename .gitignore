@@ -139,3 +139,5 @@ cython_debug/
 
 # Ignore dynaconf secret files
 .secrets.*
+
+initial_hints.pkl
