@@ -20,6 +20,7 @@ attrs = "^21.4.0"
 dynaconf = "^3.1.7"
 loguru = "^0.6"
 python = "^3.10"
+tqdm = "^4.63.0"
 typer = {extras = ["all"], version = "^0.4.0"}
 
 
@@ -30,6 +31,7 @@ coverage = {extras = ["toml"], version = "^6.3.2"}
 coverage-badge = "^1.1.0"
 isort = "^5.10.1"
 mypy = "^0.931"
+perflint = "^0.1.1"
 pre-commit = "^2.17.0"
 pylint = "^2.12.2"
 safety = "^1.10.3"
@@ -40,7 +42,6 @@ darglint = "^1.8.1"
 flake8 = "^4.0.1"
 flake8-bugbear = "^22.1.11"
 flake8-comprehensions = "^3.8.0"
-flake8-docstrings = "^1.6.0"
 flake8-pytest-style = "^1.6.0"
 pep8-naming = "^0.12.1"
 
@@ -48,15 +49,16 @@ pep8-naming = "^0.12.1"
 pytest = "^7.0.1"
 pytest-cov = "^3.0.0"
 pytest-randomly = "^3.11.0"
+pytest-xdist = {extras = ["psutil"], version = "^2.5.0"}
 
 
 [tool.poetry.scripts]
-ws = "wordle_solver.__main__:main"
-wordle-solver = "wordle_solver.__main__:main"
+ws = "wordle_solver.main:app"
+wordle-solver = "wordle_solver.main:app"
 
 
 [tool.taskipy.tasks]
-lint = { cmd = "task _isort_diff && task _black_diff && task _mypy && task _flake8 && task _poetry_check && task _safety", help = "lint the code" }
+lint = { cmd = "task _isort_diff && task _black_diff && task _mypy && task _flake8 && task _pylint && task _poetry_check && task _safety", help = "lint the code" }
 format = { cmd = "task _isort && task _black", help = "format the code" }
 test = { cmd = "task _pytest && task _coverage_badge", help = "test the code" }
 all = { cmd = "task format && task lint && task test", help = "format, lint, then test the code" }
@@ -65,9 +67,10 @@ _isort_diff = "isort --diff --check-only --settings-path pyproject.toml ./src te
 _black = "black --config pyproject.toml ./src tests"
 _black_diff = "black --diff --check --config pyproject.toml ./src tests"
 _mypy = "mypy --config-file pyproject.toml ./src"
-_flake8 = "flake8 --config=.flake8"
+_flake8 = "flake8 --config=.flake8 ./src tests"
 _poetry_check = "poetry check"
 _safety = "safety check --full-report"
+_pylint = "pylint --rcfile=.pylintrc ./src tests"
 _pytest = "pytest -c pyproject.toml"
 _coverage_badge = "coverage-badge -o assets/images/coverage.svg -f"
 
@@ -84,9 +87,15 @@ data_file = ".cache/.coverage"
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
     "raise NotImplementedError",
-    "TYPE_CHECKING",
-    "if __name__ == .__main__.:"
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "from",
+    "import",
 ]
 
 
@@ -95,12 +104,13 @@ minversion = "7.0"
 # --cov-report types: term-missing, annotate, html, xml
 addopts = """
 --cov-report term-missing
---cov-fail-under=55
 --cov
 -r a
 --strict-markers
 """
-norecursedirs =["hooks", "*.egg", ".eggs", "dist", "build", "docs", ".tox", ".git", "__pycache__"]
+# --cov-fail-under=55
+# -n auto
+norecursedirs =["hooks", "*.egg", ".eggs", "dist", "build", "docs", ".tox", ".git", "__pycache__", ".cache"]
 testpaths = ["tests"]
 markers = [
     "slow: marks tests as slow" # (deselect with '-m "not slow"')
