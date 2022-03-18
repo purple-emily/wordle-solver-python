@@ -8,11 +8,6 @@ from wordle_solver.utils import DEFAULT_WORDLIST_PATH, calculate_hints
 # from tqdm import tqdm  # type: ignore
 
 
-class Word:
-    word: str
-    hints: dict[tuple[int, ...], set[str]]
-
-
 def map_all_hints(
     guesses: list[str], solutions: list[str]
 ) -> dict[str, dict[tuple[int, ...], set[str]]]:
