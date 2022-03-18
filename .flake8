@@ -2,7 +2,7 @@
 ignore = E203,E501,W503
 per-file-ignores =
     # tests/*:S101
-    src/wordle_solver/main.py:B008
+    src/wordle_solver/main.py:B008,DAR101
 exclude =
     .git
     __pycache__

@@ -3,9 +3,9 @@ import pickle
 from math import log2
 from pathlib import Path
 
-from tqdm import tqdm  # type: ignore
-
 from wordle_solver.utils import DEFAULT_WORDLIST_PATH, calculate_hints
+
+# from tqdm import tqdm  # type: ignore
 
 
 class Word:
@@ -31,7 +31,8 @@ def map_all_hints(
         lambda: collections.defaultdict(set)
     )
 
-    for guess in tqdm(guesses):
+    # for guess in tqdm(guesses):
+    for guess in guesses:
         for secret in solutions:
             hint = calculate_hints(guess, secret)
             all_hints[guess][hint].add(secret)

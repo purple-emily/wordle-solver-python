@@ -1,8 +1,11 @@
 from pathlib import Path
-from typing import Any
+from random import choice
+from statistics import mean
+from typing import Any, Counter
 
 import typer
 from click import Choice as click_Choice
+from tqdm import tqdm  # type: ignore
 from typer import echo as typer_echo
 from typer import prompt as typer_prompt
 from typer import secho as typer_secho
@@ -50,6 +53,61 @@ def get_hint_feedback(chosen_word: str) -> tuple[int, ...]:  # pragma: no cover
 
 
 @app.command()  # pragma: no cover
+def stats(
+    word_list: Path = typer.Option(
+        DEFAULT_WORDLIST_PATH,
+        "--word-list",
+        "-w",
+        help="The directory location containing the word list files.",
+    ),
+) -> None:
+    _, all_guesses, all_solutions = load_word_list(word_list)
+    initial_hint_dict = get_initial_hints_dict(all_guesses, all_solutions)
+
+    guesses_to_completion: list[int] = []
+
+    for secret in tqdm(all_solutions):
+        # typer.echo(f"{secret=}")
+        solved = False
+        local_solutions = all_solutions[:]
+        iteration_count = 0
+        local_hint_dict = initial_hint_dict.copy()
+
+        while not solved:
+            iteration_count += 1
+            total_remaining_solutions = len(local_solutions)
+
+            if total_remaining_solutions == 1:
+                chosen_guess = local_solutions[0]
+            elif total_remaining_solutions == 2:
+                chosen_guess = choice(local_solutions)
+            else:
+                entropies = calculate_entropies(
+                    all_guesses, local_solutions, local_hint_dict
+                )
+                chosen_guess = list(entropies.keys())[0]
+
+            # typer.echo(f"{chosen_guess=}")
+            hint = calculate_hints(chosen_guess, secret)
+            if hint == (2, 2, 2, 2, 2):
+                solved = True
+                guesses_to_completion.append(iteration_count)
+                break
+
+            local_solutions = [
+                word
+                for word in local_solutions
+                if calculate_hints(chosen_guess, word) == hint
+            ]
+
+            local_hint_dict = map_all_hints(all_guesses, local_solutions)
+
+    typer_echo(f"Total words solved: {len(guesses_to_completion)}")
+    typer_echo(f"Average guess: {round(mean(guesses_to_completion), 3)}")
+    typer_echo(f"Total counts: {Counter(guesses_to_completion)}")
+
+
+@app.command()  # pragma: no cover
 def solver(
     word_list: Path = typer.Option(
         DEFAULT_WORDLIST_PATH,
@@ -58,6 +116,7 @@ def solver(
         help="The directory location containing the word list files.",
     ),
 ) -> None:
+    """Solve a word on Wordle."""
     _, guesses, solutions = load_word_list(word_list)
     hint_dict = get_initial_hints_dict(guesses, solutions)
 
