@@ -90,12 +90,3 @@ def calculate_entropies(
     entropies_sorted = sorted(entropies.items(), key=lambda x: x[1], reverse=True)
 
     return dict(entropies_sorted)
-
-
-# def main() -> None:
-# _, guesses, solutions = load_word_list()
-# initial_hints = get_initial_hints_dict(guesses, solutions)
-
-
-# if __name__ == "__main__":
-#     main()
