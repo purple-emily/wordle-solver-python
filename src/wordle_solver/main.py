@@ -129,18 +129,17 @@ def solver(
             typer_echo("There is only 1 reamining possible answer:")
             typer_echo(typer_style(solutions, bg="magenta"))
 
-            chosen_word = solutions[0]
+            chosen_guess = solutions[0]
         elif total_remaining_solutions == 2:
             typer_echo("There are 2 remaining possible answers:")
             typer_echo(typer_style(solutions, bg="magenta"))
 
-            chosen_word = typer_prompt(
+            chosen_guess = typer_prompt(
                 "Please select a guess word:",
                 type=click_Choice(solutions),
             )
         else:
             entropies = calculate_entropies(guesses, solutions, hint_dict)
-            # TODO: Possible error here?
             top_8_entropies = dict(list(entropies.items())[0:8])
 
             typer_echo(
@@ -152,12 +151,12 @@ def solver(
             typer_echo("The top 8 guesses are:")
             typer_echo(typer_style(top_8_entropies, bg="blue"))
 
-            chosen_word = typer_prompt(
+            chosen_guess = typer_prompt(
                 "Please select a guess word:",
                 type=click_Choice(list(top_8_entropies.keys())),
             )
 
-        hint_feedback = get_hint_feedback(chosen_word)
+        hint_feedback = get_hint_feedback(chosen_guess)
         if hint_feedback == (2, 2, 2, 2, 2):
             typer_secho("Victory!", fg="bright_green")
             return
