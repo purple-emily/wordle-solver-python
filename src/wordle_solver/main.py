@@ -123,7 +123,7 @@ def solver(
     for _ in range(6):
         total_remaining_solutions = len(solutions)
         if total_remaining_solutions == 0:
-            # TODO: Error out
+            # TODO: Error out?
             pass
         elif total_remaining_solutions == 1:
             typer_echo("There is only 1 reamining possible answer:")
