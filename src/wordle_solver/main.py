@@ -161,12 +161,7 @@ def solver(
             typer_secho("Victory!", fg="bright_green")
             return
 
-        solutions = [
-            word
-            for word in solutions
-            if calculate_hints(chosen_word, word) == hint_feedback
-        ]
-
+        solutions = list(hint_dict[chosen_guess][hint_feedback])
         hint_dict = map_all_hints(guesses, solutions)
 
 
