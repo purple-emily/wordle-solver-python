@@ -64,47 +64,49 @@ def stats(
     _, all_guesses, all_solutions = load_word_list(word_list)
     initial_hint_dict = get_initial_hints_dict(all_guesses, all_solutions)
 
-    guesses_to_completion: list[int] = []
+    temp_entropies = calculate_entropies(all_guesses, all_solutions, initial_hint_dict)
+    top_initial_guesses: list[str] = list(temp_entropies.keys())[0:10]
 
-    for secret in tqdm(all_solutions):
-        # typer.echo(f"{secret=}")
-        solved = False
-        local_solutions = all_solutions[:]
-        iteration_count = 0
-        local_hint_dict = initial_hint_dict.copy()
+    for initial_guess in top_initial_guesses:
+        guesses_to_solved: list[int] = []
 
-        while not solved:
-            iteration_count += 1
-            total_remaining_solutions = len(local_solutions)
+        for secret in tqdm(all_solutions):
+            solved = False
+            iteration_count = 1
 
-            if total_remaining_solutions == 1:
-                chosen_guess = local_solutions[0]
-            elif total_remaining_solutions == 2:
-                chosen_guess = choice(local_solutions)
-            else:
-                entropies = calculate_entropies(
-                    all_guesses, local_solutions, local_hint_dict
-                )
-                chosen_guess = list(entropies.keys())[0]
-
-            # typer.echo(f"{chosen_guess=}")
-            hint = calculate_hints(chosen_guess, secret)
-            if hint == (2, 2, 2, 2, 2):
-                solved = True
-                guesses_to_completion.append(iteration_count)
-                break
-
-            local_solutions = [
-                word
-                for word in local_solutions
-                if calculate_hints(chosen_guess, word) == hint
-            ]
-
+            # The first guess is the most computational, so try to keep it fast
+            hint = calculate_hints(initial_guess, secret)
+            local_solutions = list(initial_hint_dict[initial_guess][hint])
             local_hint_dict = map_all_hints(all_guesses, local_solutions)
 
-    typer_echo(f"Total words solved: {len(guesses_to_completion)}")
-    typer_echo(f"Average guess: {round(mean(guesses_to_completion), 3)}")
-    typer_echo(f"Total counts: {Counter(guesses_to_completion)}")
+            while not solved:
+                iteration_count += 1
+                total_remaining_solutions = len(local_solutions)
+
+                if total_remaining_solutions == 1:
+                    chosen_guess = local_solutions[0]
+                elif total_remaining_solutions == 2:
+                    chosen_guess = choice(local_solutions)
+                else:
+                    entropies = calculate_entropies(
+                        all_guesses, local_solutions, local_hint_dict
+                    )
+                    chosen_guess = list(entropies.keys())[0]
+
+                # typer_echo(f"{chosen_guess=}")
+                hint = calculate_hints(chosen_guess, secret)
+                if hint == (2, 2, 2, 2, 2):
+                    solved = True
+                    guesses_to_solved.append(iteration_count)
+                    break
+
+                local_solutions = list(local_hint_dict[chosen_guess][hint])
+                local_hint_dict = map_all_hints(all_guesses, local_solutions)
+
+        typer_echo(f"Using guess: {initial_guess}")
+        typer_echo(f"Total words solved: {len(guesses_to_solved)}")
+        typer_echo(f"Average guess: {round(mean(guesses_to_solved), 3)}")
+        typer_echo(f"Total counts: {Counter(guesses_to_solved)}")
 
 
 @app.command()  # pragma: no cover
@@ -123,24 +125,23 @@ def solver(
     for _ in range(6):
         total_remaining_solutions = len(solutions)
         if total_remaining_solutions == 0:
-            # TODO: Error out
+            # TODO: Error out?
             pass
         elif total_remaining_solutions == 1:
             typer_echo("There is only 1 reamining possible answer:")
             typer_echo(typer_style(solutions, bg="magenta"))
 
-            chosen_word = solutions[0]
+            chosen_guess = solutions[0]
         elif total_remaining_solutions == 2:
             typer_echo("There are 2 remaining possible answers:")
             typer_echo(typer_style(solutions, bg="magenta"))
 
-            chosen_word = typer_prompt(
+            chosen_guess = typer_prompt(
                 "Please select a guess word:",
                 type=click_Choice(solutions),
             )
         else:
             entropies = calculate_entropies(guesses, solutions, hint_dict)
-            # TODO: Possible error here?
             top_8_entropies = dict(list(entropies.items())[0:8])
 
             typer_echo(
@@ -152,22 +153,17 @@ def solver(
             typer_echo("The top 8 guesses are:")
             typer_echo(typer_style(top_8_entropies, bg="blue"))
 
-            chosen_word = typer_prompt(
+            chosen_guess = typer_prompt(
                 "Please select a guess word:",
                 type=click_Choice(list(top_8_entropies.keys())),
             )
 
-        hint_feedback = get_hint_feedback(chosen_word)
+        hint_feedback = get_hint_feedback(chosen_guess)
         if hint_feedback == (2, 2, 2, 2, 2):
             typer_secho("Victory!", fg="bright_green")
             return
 
-        solutions = [
-            word
-            for word in solutions
-            if calculate_hints(chosen_word, word) == hint_feedback
-        ]
-
+        solutions = list(hint_dict[chosen_guess][hint_feedback])
         hint_dict = map_all_hints(guesses, solutions)
 
 
