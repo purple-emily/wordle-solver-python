@@ -8,21 +8,16 @@ license = "MIT"
 repository = "https://github.com/purple-emily/wordle-solver-python"
 
 packages = [
-    { include = "src/wordle_solver" }
+    { include = "wordle_solver", from="src" }
 ]
-
-# Keywords description https://python-poetry.org/docs/pyproject/#keywords
-# keywords = []
-
 
 [tool.poetry.dependencies]
 attrs = "^21.4.0"
 dynaconf = "^3.1.7"
-loguru = "^0.6"
+loguru = "^0.6.0"
 python = "^3.10"
-tqdm = "^4.63.0"
+tqdm = "^4.63.1"
 typer = {extras = ["all"], version = "^0.4.0"}
-
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
@@ -30,54 +25,32 @@ bump2version = "^1.0.1"
 coverage = {extras = ["toml"], version = "^6.3.2"}
 coverage-badge = "^1.1.0"
 isort = "^5.10.1"
-mypy = "^0.931"
-perflint = "^0.1.1"
+mypy = "^0.942"
+perflint = "^0.6.0"
 pre-commit = "^2.17.0"
-pylint = "^2.12.2"
+pylint = "^2.13.0"
 safety = "^1.10.3"
-taskipy = "^1.10.1"
 
 # flake8 + plugins
 darglint = "^1.8.1"
 flake8 = "^4.0.1"
-flake8-bugbear = "^22.1.11"
+flake8-bugbear = "^22.3.23"
 flake8-comprehensions = "^3.8.0"
 flake8-pytest-style = "^1.6.0"
 pep8-naming = "^0.12.1"
 
 # pytest + plugins
-pytest = "^7.0.1"
+pytest = "^7.1.1"
 pytest-cov = "^3.0.0"
 pytest-randomly = "^3.11.0"
-pytest-xdist = {extras = ["psutil"], version = "^2.5.0"}
-
+pytest-xdist = {extras = ["all"], version = "^2.5.0"}
 
 [tool.poetry.scripts]
 ws = "wordle_solver.main:app"
 wordle-solver = "wordle_solver.main:app"
 
-
-[tool.taskipy.tasks]
-lint = { cmd = "task _isort_diff && task _black_diff && task _mypy && task _flake8 && task _pylint && task _poetry_check && task _safety", help = "lint the code" }
-format = { cmd = "task _isort && task _black", help = "format the code" }
-test = { cmd = "task _pytest && task _coverage_badge", help = "test the code" }
-all = { cmd = "task format && task lint && task test", help = "format, lint, then test the code" }
-_isort = "isort --settings-path pyproject.toml ./src tests"
-_isort_diff = "isort --diff --check-only --settings-path pyproject.toml ./src tests"
-_black = "black --config pyproject.toml ./src tests"
-_black_diff = "black --diff --check --config pyproject.toml ./src tests"
-_mypy = "mypy --config-file pyproject.toml ./src"
-_flake8 = "flake8 --config=.flake8 ./src tests"
-_poetry_check = "poetry check"
-_safety = "safety check --full-report"
-_pylint = "pylint --rcfile=.pylintrc ./src tests"
-_pytest = "pytest -c pyproject.toml"
-_coverage_badge = "coverage-badge -o assets/images/coverage.svg -f"
-
-
 [tool.isort]
 profile = "black"
-
 
 [tool.coverage.run]
 branch = true
@@ -98,7 +71,6 @@ exclude_lines = [
     "import",
 ]
 
-
 [tool.pytest.ini_options]
 minversion = "7.0"
 # --cov-report types: term-missing, annotate, html, xml
@@ -118,7 +90,6 @@ markers = [
 
 cache_dir = ".cache/pytest/"
 
-
 [tool.mypy]
 python_version = 3.9
 strict = true
@@ -137,7 +108,6 @@ cache_dir = ".cache/mypy/"
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
-
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
