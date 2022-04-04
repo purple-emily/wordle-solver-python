@@ -1,5 +1,7 @@
-import collections
+from collections import Counter
+from math import log2
 from pathlib import Path
+from pickle import dump, load
 
 from wordle_solver.config import settings
 
@@ -8,9 +10,7 @@ DEFAULT_WORDLIST_PATH = (
 )
 
 
-def load_word_list(
-    directory: Path = DEFAULT_WORDLIST_PATH,
-) -> tuple[str, list[str], list[str]]:
+def load_word_list(directory: Path) -> tuple[set[str], set[str]]:
     """Load a word list from a directory.
 
     The directory must have a `guesses.txt` and `solutions.txt`. The files containing
@@ -18,43 +18,39 @@ def load_word_list(
 
     Args:
         directory (Path):
-            The path of the directory containing the `guesses.txt` and `solutions.txt`
-            files. Defaults to data/<settings.default_wordlist>.
+            The directory with the word list files.
+            Defaults to the `data` folder, and the variable `default_wordlist`
+            in `settings.toml`.
 
     Raises:
-        FileNotFoundError: The supplied directory does not exist.
+        FileNotFoundError: The directory does not exist.
         FileNotFoundError: The file `guesses.txt` does not exist.
         FileNotFoundError: The file `solutions.txt` does not exist.
 
     Returns:
-        tuple[str, list[str], list[str]]:
+        tuple[str, set[str], set[str]]:
             The name of the word list, the valid guesses, and the possible solutions.
     """
     if not directory.exists():
-        raise FileNotFoundError("Directory does not exist.")
+        raise FileNotFoundError(f"{directory} does not exist")
 
-    guesses_path: Path = Path(directory / "guesses.txt")
+    guesses_file = directory / "guesses.txt"
 
-    if not guesses_path.exists():
-        raise FileNotFoundError("Guesses file does not exist in directory.")
+    if not guesses_file.exists():
+        raise FileNotFoundError(f"{guesses_file} does not exist")
 
-    solutions_path: Path = Path(directory / "solutions.txt")
+    solutions_file = directory / "solutions.txt"
 
-    if not solutions_path.exists():
-        raise FileNotFoundError("Solutions file does not exist in directory.")
+    if not solutions_file.exists():
+        raise FileNotFoundError(f"{solutions_file} does not exist")
 
-    word_list: str = directory.name
+    guesses = set(guesses_file.read_text().splitlines())
+    solutions = set(solutions_file.read_text().splitlines())
 
-    with open(guesses_path, encoding="utf-8") as guesses_stream:
-        guesses = [word.strip() for word in guesses_stream.readlines()]
-
-    with open(solutions_path, encoding="utf-8") as solutions_stream:
-        solutions = [word.strip() for word in solutions_stream.readlines()]
-
-    return (word_list, guesses, solutions)
+    return guesses, solutions
 
 
-def calculate_hints(guess: str, secret: str) -> tuple[int, ...]:
+def calculate_wordle_hint(guess: str, secret: str) -> tuple[int, ...]:
     """Compare a guess against a secret word and calculate a hint on how close the
     guess word is to the secret word.
 
@@ -77,19 +73,125 @@ def calculate_hints(guess: str, secret: str) -> tuple[int, ...]:
         >>> calculate_hints("orate", "oater")
         (2, 1, 1, 1, 1)
     """
-    count_of_not_exact_matches = collections.Counter(
+    non_matches_count = Counter(
         secret for secret, guess in zip(secret, guess) if secret != guess
     )
 
-    hint_pattern: list[int] = []
+    the_hint: list[int] = []
 
-    for secret_char, guess_char in zip(secret, guess):
-        if secret_char == guess_char:
-            hint_pattern.append(2)  # green
-        elif guess_char in secret and count_of_not_exact_matches[guess_char] > 0:
-            hint_pattern.append(1)  # yellow
-            count_of_not_exact_matches[guess_char] -= 1
+    for guess_char, secret_char in zip(  # pylint: disable=use-list-comprehension
+        guess, secret
+    ):
+        if guess_char == secret_char:
+            the_hint.append(2)
+        elif guess_char in secret and non_matches_count[guess_char] > 0:
+            the_hint.append(1)
+            non_matches_count[guess_char] -= 1
         else:
-            hint_pattern.append(0)  # grey
+            the_hint.append(0)
 
-    return tuple(hint_pattern)
+    return tuple(the_hint)
+
+
+def create_hint_tree(
+    guesses: set[str], solutions: set[str]
+) -> dict[str, dict[tuple[int, ...], set[str]]]:
+    """_summary_. # TODO: summary
+
+    Args:
+        guesses (set[str]): _description_ # TODO: description
+        solutions (set[str]): _description_ # TODO: description
+
+    Returns:
+        dict[str, dict[tuple[int, ...], set[str]]]: _description_ # TODO: description
+    """
+    hint_tree: dict[str, dict[tuple[int, ...], set[str]]] = {}
+
+    for guess in guesses:
+        for secret in solutions:
+            hint = calculate_wordle_hint(guess, secret)
+            hint_tree.setdefault(guess, {}).setdefault(hint, set()).add(secret)
+
+    return hint_tree
+
+
+def get_hint_tree(
+    directory: Path,
+    guesses: set[str],
+    solutions: set[str],
+) -> dict[str, dict[tuple[int, ...], set[str]]]:
+    """_summary_. # TODO: summary
+
+    Args:
+        directory (Path): _description_ # TODO: description
+        guesses (set[str]): _description_ # TODO: description
+        solutions (set[str]): _description_ # TODO: description
+
+    Raises:
+        FileNotFoundError: _description_ # TODO: description
+
+    Returns:
+        dict[str, dict[tuple[int, ...], set[str]]]: _description_ # TODO: description
+    """
+    if not directory.exists():
+        raise FileNotFoundError(f"{directory} does not exist")
+
+    hint_tree_file = directory / "hint_tree.pickle"
+
+    if not hint_tree_file.exists():
+        hint_tree = create_hint_tree(guesses, solutions)
+        dump(hint_tree, hint_tree_file.open("wb"))
+    else:
+        hint_tree = load(hint_tree_file.open("rb"))
+
+    return hint_tree
+
+
+def calculate_entropies(
+    guesses: set[str],  # pylint: disable=unused-argument
+    solutions: set[str],
+    max_solutions: int,
+    hint_tree: dict[str, dict[tuple[int, ...], set[str]]],
+) -> dict[str, float]:
+    """This function calculates the entropy of each word in left in solutions.
+
+    The entropy is the level of information we expect to receive if we select the word
+    as the guess word. The higher the entropy the more information we expect to receive.
+
+    Args:
+        guesses (set[str]):
+            the list of valid guesses
+        solutions (set[str]):
+            the list of remaining solutions
+        max_solutions (int):
+            the maximum number of solutions to consider
+        hint_tree (dict[str, dict[tuple[int, ...], set[str]]]):
+            the hint dictionary
+
+    Returns:
+        dict[str, float]:
+            a dictionary with the word as the key and entropy as value
+    """
+    total_remaining_solutions = len(solutions)
+    entropies: dict[str, float] = {}
+
+    for word in guesses:
+        # Calculate the entropy of the word
+        entropy: float = 0
+        for hint in hint_tree[word]:
+            if len(solutions) == max_solutions:
+                # If we are calculating the entropy of the entire solutions set f
+                probability = len(hint_tree[word][hint]) / total_remaining_solutions
+            else:
+                len_new_solutions = len(
+                    set(solutions).intersection(hint_tree[word][hint])
+                )
+                if len_new_solutions == 0:
+                    continue
+                probability = len_new_solutions / total_remaining_solutions
+            entropy += -probability * log2(probability)
+
+        entropies[word] = round(entropy, 2)
+
+    sorted_entropies = sorted(entropies.items(), key=lambda x: x[1], reverse=True)
+    return dict(sorted_entropies)
